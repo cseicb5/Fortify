@@ -1,18 +1,21 @@
-package com.example.fortify // Or your package name
+package com.example.fortify
 
+import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.content.SharedPreferences
 import android.net.Uri
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.provider.OpenableColumns
-import android.view.View
+import android.util.Log
 import android.widget.Button
-import android.widget.ProgressBar
-import android.widget.TextView
 import android.widget.Toast
-import androidx.appcompat.app.AppCompatActivity
-import androidx.cardview.widget.CardView
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.recyclerview.widget.RecyclerView
 import okhttp3.*
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.RequestBody.Companion.asRequestBody
@@ -23,117 +26,86 @@ import java.io.IOException
 
 class ScanApkActivity : AppCompatActivity() {
 
-    // UI Views
-    private lateinit var selectedFileTextView: TextView
-    private lateinit var uploadApkButton: Button
-    private lateinit var scanProgressBar: ProgressBar
-    private lateinit var statusTextView: TextView
-    private lateinit var resultsCardView: CardView
-    private lateinit var maliciousTextView: TextView
-    private lateinit var confidenceTextView: TextView
-    private lateinit var reportContentTextView: TextView
+    // --- UI Views ---
+    private lateinit var selectApkButton: Button
+    private lateinit var scanJobsRecyclerView: RecyclerView
 
-    // Networking and Data
-    private val client = OkHttpClient()
-    private lateinit var serverUrl: String
-    private lateinit var jwtToken: String
-    private var fileUri: Uri? = null
-
-    // Polling
+    // --- Other variables ---
+    private lateinit var scanJobAdapter: ScanJobAdapter
+    private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var client: OkHttpClient
     private val handler = Handler(Looper.getMainLooper())
-    private var pollingRunnable: Runnable? = null
+    private val pollingRunnables = mutableMapOf<String, Runnable>()
+
+    // This launcher handles the result from the file picker
+    private val filePickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        if (result.resultCode == Activity.RESULT_OK) {
+            result.data?.data?.let { uri ->
+                uploadApkFile(uri)
+            }
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_scan_apk)
 
-        // Initialize UI
+        // Bind views and initialize components
         bindViews()
+        client = OkHttpClient()
+        sharedPreferences = getSharedPreferences("FortifyPrefs", Context.MODE_PRIVATE)
 
-        // Get data from SharedPreferences
-        val sharedPreferences = getSharedPreferences("FortifyPrefs", Context.MODE_PRIVATE)
-        serverUrl = sharedPreferences.getString("serverUrl", "")!!
-        jwtToken = sharedPreferences.getString("jwtToken", "")!!
+        // Setup the RecyclerView
+        scanJobAdapter = ScanJobAdapter(mutableListOf())
+        scanJobsRecyclerView.adapter = scanJobAdapter
 
-        // Get file details from the Intent
-        val fileUriString = intent.getStringExtra("FILE_URI")
-        val fileName = intent.getStringExtra("FILE_NAME")
-        if (fileUriString != null) {
-            fileUri = Uri.parse(fileUriString)
-            selectedFileTextView.text = "Selected: $fileName"
-            uploadApkButton.isEnabled = true
-        }
-
-        uploadApkButton.setOnClickListener {
-            if (fileUri != null) {
-                uploadApkFile(fileUri!!)
-            } else {
-                Toast.makeText(this, "No file selected.", Toast.LENGTH_SHORT).show()
-            }
+        selectApkButton.setOnClickListener {
+            openFilePicker()
         }
     }
 
     private fun bindViews() {
-        selectedFileTextView = findViewById(R.id.selectedFileTextView)
-        uploadApkButton = findViewById(R.id.uploadApkButton)
-        scanProgressBar = findViewById(R.id.scanProgressBar)
-        statusTextView = findViewById(R.id.statusTextView)
-        resultsCardView = findViewById(R.id.resultsCardView)
-        maliciousTextView = findViewById(R.id.maliciousTextView)
-        confidenceTextView = findViewById(R.id.confidenceTextView)
-        reportContentTextView = findViewById(R.id.reportContentTextView)
+        selectApkButton = findViewById(R.id.selectApkButton)
+        scanJobsRecyclerView = findViewById(R.id.scanJobsRecyclerView)
     }
 
-    private fun setUiState(state: ScanState) {
-        when (state) {
-            ScanState.Idle -> {
-                uploadApkButton.isEnabled = true
-                scanProgressBar.visibility = View.GONE
-                statusTextView.visibility = View.GONE
-                resultsCardView.visibility = View.GONE
-            }
-            ScanState.Uploading -> {
-                uploadApkButton.isEnabled = false
-                scanProgressBar.visibility = View.VISIBLE
-                statusTextView.visibility = View.VISIBLE
-                statusTextView.text = "Status: Uploading..."
-                resultsCardView.visibility = View.GONE
-            }
-            ScanState.Polling -> {
-                uploadApkButton.isEnabled = false
-                scanProgressBar.visibility = View.VISIBLE
-                statusTextView.visibility = View.VISIBLE
-                statusTextView.text = "Status: Scanning..."
-                resultsCardView.visibility = View.GONE
-            }
-            is ScanState.Done -> {
-                uploadApkButton.isEnabled = true
-                scanProgressBar.visibility = View.GONE
-                statusTextView.visibility = View.GONE
-                resultsCardView.visibility = View.VISIBLE
-                displayResults(state.result)
-            }
+    private fun openFilePicker() {
+        // --- THIS IS THE FIX ---
+        // We now use the more general ACTION_GET_CONTENT.
+        // This is more likely to show third-party file managers like Samsung's "My Files".
+        val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+            type = "application/vnd.android.package-archive"
+            addCategory(Intent.CATEGORY_OPENABLE)
         }
+        // --- END OF FIX ---
+        filePickerLauncher.launch(intent)
     }
 
     private fun uploadApkFile(uri: Uri) {
-        setUiState(ScanState.Uploading)
+        val fileName = getFileName(uri) ?: "unknown.apk"
+        val tempFile = File(cacheDir, fileName)
 
-        // Create a temporary file from the URI to upload
-        val tempFile = File(cacheDir, getFileName(uri) ?: "temp_apk.apk")
-        contentResolver.openInputStream(uri)?.use { inputStream ->
-            FileOutputStream(tempFile).use { outputStream ->
-                inputStream.copyTo(outputStream)
+        try {
+            contentResolver.openInputStream(uri)?.use { inputStream ->
+                FileOutputStream(tempFile).use { outputStream ->
+                    inputStream.copyTo(outputStream)
+                }
             }
+        } catch (e: IOException) {
+            e.printStackTrace()
+            Toast.makeText(this, "Failed to read file.", Toast.LENGTH_SHORT).show()
+            return
         }
+
+        val placeholderJob = ScanJob(fileName, "-1", "Uploading...", R.color.card_background)
+        scanJobAdapter.addJob(placeholderJob)
+
+        val serverUrl = sharedPreferences.getString("serverUrl", "")
+        val jwtToken = sharedPreferences.getString("jwtToken", "")
 
         val requestBody = MultipartBody.Builder()
             .setType(MultipartBody.FORM)
-            .addFormDataPart(
-                "file",
-                tempFile.name,
-                tempFile.asRequestBody("application/vnd.android.package-archive".toMediaTypeOrNull())
-            )
+            .addFormDataPart("file", tempFile.name, tempFile.asRequestBody("application/vnd.android.package-archive".toMediaTypeOrNull()))
             .build()
 
         val request = Request.Builder()
@@ -145,7 +117,6 @@ class ScanApkActivity : AppCompatActivity() {
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 runOnUiThread {
-                    setUiState(ScanState.Idle)
                     Toast.makeText(applicationContext, "Upload failed: ${e.message}", Toast.LENGTH_LONG).show()
                 }
             }
@@ -156,12 +127,12 @@ class ScanApkActivity : AppCompatActivity() {
                     val jsonObject = JSONObject(responseBody)
                     val jobId = jsonObject.getString("jobID")
                     runOnUiThread {
-                        setUiState(ScanState.Polling)
+                        scanJobAdapter.updateJobId("-1", jobId)
+                        scanJobAdapter.updateJobStatus(jobId, "Scanning...", R.color.card_background)
                         startPolling(jobId)
                     }
                 } else {
                     runOnUiThread {
-                        setUiState(ScanState.Idle)
                         Toast.makeText(applicationContext, "Server error: ${response.message}", Toast.LENGTH_SHORT).show()
                     }
                 }
@@ -170,57 +141,49 @@ class ScanApkActivity : AppCompatActivity() {
     }
 
     private fun startPolling(jobId: String) {
-        pollingRunnable = object : Runnable {
+        val serverUrl = sharedPreferences.getString("serverUrl", "")
+        val jwtToken = sharedPreferences.getString("jwtToken", "")
+
+        val runnable = object : Runnable {
             override fun run() {
-                checkScanStatus(jobId)
-                handler.postDelayed(this, 10000) // Poll every 10 seconds
+                val request = Request.Builder()
+                    .url("$serverUrl/scanStatus?jobID=$jobId")
+                    .header("Authorization", "Bearer $jwtToken")
+                    .build()
+
+                client.newCall(request).enqueue(object : Callback {
+                    override fun onFailure(call: Call, e: IOException) {
+                        Log.e("PollingError", "Failed for job $jobId: ${e.message}")
+                    }
+
+                    override fun onResponse(call: Call, response: Response) {
+                        val responseBody = response.body?.string()
+                        if (response.isSuccessful && responseBody != null) {
+                            val json = JSONObject(responseBody)
+                            val details = json.getJSONObject("details")
+                            val status = details.getString("STATUS")
+
+                            if (status.equals("Done", ignoreCase = true)) {
+                                val detectionResult = details.getString("DETECTION")
+                                val isMalicious = detectionResult.contains("Detections") && !detectionResult.startsWith("0")
+                                val resultColor = if (isMalicious) R.color.result_malicious else R.color.result_clean
+                                val finalStatus = if (isMalicious) detectionResult else "Clean"
+
+                                runOnUiThread {
+                                    scanJobAdapter.updateJobStatus(jobId, finalStatus, resultColor)
+                                    pollingRunnables.remove(jobId)?.let { handler.removeCallbacks(it) }
+                                }
+                            }
+                        }
+                    }
+                })
+                handler.postDelayed(this, 10000)
             }
         }
-        handler.post(pollingRunnable!!)
+        pollingRunnables[jobId] = runnable
+        handler.post(runnable)
     }
 
-    private fun checkScanStatus(jobId: String) {
-        val request = Request.Builder()
-            .url("$serverUrl/scanStatus?jobID=$jobId")
-            .header("Authorization", "Bearer $jwtToken")
-            .build()
-
-        client.newCall(request).enqueue(object : Callback {
-            override fun onFailure(call: Call, e: IOException) {
-                // Don't show toast on every poll failure, just log it
-                e.printStackTrace()
-            }
-
-            override fun onResponse(call: Call, response: Response) {
-                val responseBody = response.body?.string()
-                if (response.isSuccessful && responseBody != null) {
-                    val json = JSONObject(responseBody)
-                    val details = json.getJSONObject("details")
-                    val status = details.getString("STATUS")
-
-                    if (status.equals("Done", ignoreCase = true)) {
-                        handler.removeCallbacks(pollingRunnable!!)
-
-                        // Parse the final result
-                        val finalResult = ScanResult(
-                            malicious = !details.getString("DETECTION").equals("N/A", ignoreCase = true),
-                            confidence = details.optDouble("CONFIDENCE", 0.0),
-                            report = details.getString("DETECTION")
-                        )
-                        runOnUiThread { setUiState(ScanState.Done(finalResult)) }
-                    }
-                }
-            }
-        })
-    }
-
-    private fun displayResults(result: ScanResult) {
-        maliciousTextView.text = "Result: ${if (result.malicious) "Malicious" else "Clean"}"
-        confidenceTextView.text = "Confidence: ${(result.confidence * 100).toInt()}%"
-        reportContentTextView.text = result.report
-    }
-
-    // Helper function to get filename from URI
     private fun getFileName(uri: Uri): String? {
         var fileName: String? = null
         contentResolver.query(uri, null, null, null, null)?.use { cursor ->
@@ -236,22 +199,7 @@ class ScanApkActivity : AppCompatActivity() {
 
     override fun onDestroy() {
         super.onDestroy()
-        // Stop polling when the activity is destroyed to prevent memory leaks
-        pollingRunnable?.let { handler.removeCallbacks(it) }
+        pollingRunnables.values.forEach { handler.removeCallbacks(it) }
     }
 }
 
-// Sealed class to represent the different states of the UI
-sealed class ScanState {
-    object Idle : ScanState()
-    object Uploading : ScanState()
-    object Polling : ScanState()
-    data class Done(val result: ScanResult) : ScanState()
-}
-
-// Data class to hold the final scan result
-data class ScanResult(
-    val malicious: Boolean,
-    val confidence: Double,
-    val report: String
-)

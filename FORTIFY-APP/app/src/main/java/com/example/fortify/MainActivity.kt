@@ -1,5 +1,6 @@
 package com.example.fortify // Or your package name e.g., com.example.fortify
 
+import android.animation.ObjectAnimator
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
@@ -7,10 +8,12 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.View
+import android.view.animation.AnticipateInterpolator
 import android.widget.Button
 import android.widget.EditText
 import android.widget.ProgressBar
 import android.widget.Toast
+import androidx.core.animation.doOnEnd
 import com.example.fortify.HomeActivity
 import com.example.fortify.R
 import okhttp3.*
@@ -18,6 +21,7 @@ import okhttp3.MediaType.Companion.toMediaType
 import okhttp3.RequestBody.Companion.toRequestBody
 import org.json.JSONObject
 import java.io.IOException
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 
 class MainActivity : AppCompatActivity() {
 
@@ -30,8 +34,34 @@ class MainActivity : AppCompatActivity() {
     private val client = OkHttpClient()
 
     override fun onCreate(savedInstanceState: Bundle?) {
+        // --- THIS IS THE NEW SPLASH SCREEN CODE ---
+        // Install the splash screen. It must be called before setContentView().
+        val splashScreen = installSplashScreen()
+        // --- END OF NEW SPLASH SCREEN CODE ---
+
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+
+        // --- ADD SPLASH SCREEN EXIT ANIMATION ---
+        splashScreen.setOnExitAnimationListener { splashScreenView ->
+            // Create an animator that moves the icon up off the screen.
+            val slideUp = ObjectAnimator.ofFloat(
+                splashScreenView.iconView,
+                View.TRANSLATION_Y,
+                0f,
+                -splashScreenView.iconView.height.toFloat()
+            )
+            slideUp.interpolator = AnticipateInterpolator()
+            slideUp.duration = 800L
+
+            // Call remove() on the view when the animation ends.
+            slideUp.doOnEnd { splashScreenView.remove() }
+
+            // Start the animation.
+            slideUp.start()
+        }
+        // --- END OF ANIMATION CODE ---
+
 
         serverUrlEditText = findViewById(R.id.serverUrlEditText)
         usernameEditText = findViewById(R.id.usernameEditText)

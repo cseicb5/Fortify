@@ -1,9 +1,22 @@
 <resources xmlns:tools="http://schemas.android.com/tools">
-    <!-- Base application theme. -->
-    <style name="Base.Theme.Fortify" parent="Theme.Material3.DayNight.NoActionBar">
-        <!-- Customize your light theme here. -->
-        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+    <!-- 1. Main Application Theme (Now a dedicated Dark Theme) -->
+    <style name="Theme.Fortify" parent="Theme.Material3.Dark.NoActionBar">
+        <!-- We use the colors you defined in colors.xml -->
+        <item name="android:windowBackground">@color/app_background</item>
+        <item name="colorPrimary">@color/button_background</item>
     </style>
 
-    <style name="Theme.Fortify" parent="Base.Theme.Fortify" />
+    <!-- 2. Special Theme for the Splash Screen -->
+    <style name="Theme.App.Starting" parent="Theme.SplashScreen">
+        <!-- Set the splash screen's background color -->
+        <item name="windowSplashScreenBackground">@color/app_background</item>
+
+        <!-- *** THIS IS THE ONLY CHANGE *** -->
+        <!-- Use the new drawable to prevent the icon from stretching -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/splash_icon</item>
+
+        <!-- Set the theme the app will transition to *after* the splash screen is done -->
+        <item name="postSplashScreenTheme">@style/Theme.Fortify</item>
+    </style>
 </resources>
+
