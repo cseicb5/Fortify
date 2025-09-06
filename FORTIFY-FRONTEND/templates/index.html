@@ -1,0 +1,1479 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fortify - Mobile Security Solution</title>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@100;200;300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        :root {
+            --primary: #1d1d1f;
+            --secondary: #6e6e73;
+            --accent: #007aff;
+            --accent-purple: #5856d6;
+            --accent-pink: #ff2d92;
+            --surface: rgba(255, 255, 255, 0.25);
+            --glass: rgba(255, 255, 255, 0.1);
+            --glass-border: rgba(255, 255, 255, 0.18);
+            --shadow: rgba(31, 38, 135, 0.37);
+            --terminal-bg: #f8f8f8;
+            --terminal-border: #e5e5e7;
+            --gradient-1: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --gradient-2: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            --gradient-3: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        }
+
+        body {
+            font-family: 'JetBrains Mono', monospace;
+            background: #f5f5f7;
+            color: var(--primary);
+            line-height: 1.6;
+            font-weight: 400;
+            overflow-x: hidden;
+            scroll-behavior: smooth;
+        }
+
+        /* Enhanced Background with Floating Glass Elements */
+        .bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: -1;
+            background: linear-gradient(135deg, #f5f5f7 0%, #e8eaf6 30%, #f3e5f5 70%, #e1f5fe 100%);
+        }
+
+        .floating-glass {
+            position: absolute;
+            background: var(--surface);
+            backdrop-filter: blur(40px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            animation: float 20s infinite ease-in-out;
+            box-shadow: 0 8px 32px var(--shadow);
+        }
+
+        .glass-1 {
+            width: 200px;
+            height: 200px;
+            top: 10%;
+            left: 80%;
+            animation-delay: 0s;
+        }
+
+        .glass-2 {
+            width: 150px;
+            height: 150px;
+            top: 70%;
+            left: 10%;
+            animation-delay: -5s;
+        }
+
+        .glass-3 {
+            width: 300px;
+            height: 100px;
+            top: 30%;
+            right: 70%;
+            animation-delay: -10s;
+        }
+
+        .glass-4 {
+            width: 120px;
+            height: 120px;
+            top: 60%;
+            right: 20%;
+            animation-delay: -15s;
+        }
+
+        @keyframes float {
+            0%, 100% { 
+                transform: translateY(0px) rotate(0deg);
+                opacity: 0.3;
+            }
+            25% { 
+                transform: translateY(-30px) rotate(90deg);
+                opacity: 0.6;
+            }
+            50% { 
+                transform: translateY(0px) rotate(180deg);
+                opacity: 0.4;
+            }
+            75% { 
+                transform: translateY(30px) rotate(270deg);
+                opacity: 0.7;
+            }
+        }
+
+        /* Gradient Orbs */
+        .gradient-orb {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.1;
+            animation: drift 25s infinite ease-in-out;
+        }
+
+        .orb-1 {
+            width: 400px;
+            height: 400px;
+            background: var(--gradient-1);
+            top: -200px;
+            right: -200px;
+            animation-delay: 0s;
+        }
+
+        .orb-2 {
+            width: 300px;
+            height: 300px;
+            background: var(--gradient-2);
+            bottom: -150px;
+            left: -150px;
+            animation-delay: -8s;
+        }
+
+        .orb-3 {
+            width: 250px;
+            height: 250px;
+            background: var(--gradient-3);
+            top: 50%;
+            left: 50%;
+            animation-delay: -16s;
+        }
+
+        @keyframes drift {
+            0%, 100% { transform: translate(0, 0) scale(1); }
+            33% { transform: translate(30px, -30px) scale(1.1); }
+            66% { transform: translate(-30px, 30px) scale(0.9); }
+        }
+
+        /* Navigation with Glass Effect */
+        nav {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: saturate(180%) blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 16px;
+            padding: 8px 16px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 32px var(--shadow);
+        }
+
+        nav:hover {
+            background: rgba(255, 255, 255, 0.35);
+            transform: translateX(-50%) translateY(-2px);
+        }
+
+        .nav-links {
+            display: flex;
+            list-style: none;
+            gap: 32px;
+            margin: 0;
+        }
+
+        .nav-links a {
+            color: var(--primary);
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            padding: 12px 16px;
+            border-radius: 10px;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .nav-links a::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+            transition: left 0.5s;
+        }
+
+        .nav-links a:hover::before {
+            left: 100%;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent);
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        /* Hero Section */
+        .hero {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 140px 24px 80px;
+            position: relative;
+        }
+
+        .hero-content {
+            max-width: 1000px;
+            position: relative;
+            z-index: 2;
+        }
+
+        .hero-badge {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 50px;
+            padding: 8px 20px;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--accent);
+            margin-bottom: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .hero-badge:hover {
+            transform: scale(1.05);
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .hero-title {
+            font-size: clamp(72px, 12vw, 160px);
+            font-weight: 900;
+            background: linear-gradient(135deg, var(--accent) 0%, var(--accent-purple) 50%, var(--accent-pink) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 0.8;
+            margin-bottom: 32px;
+            letter-spacing: -0.02em;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .hero-subtitle {
+            font-size: clamp(22px, 4vw, 32px);
+            font-weight: 600;
+            color: var(--primary);
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+
+        .hero-description {
+            font-size: 18px;
+            color: var(--secondary);
+            margin-bottom: 64px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            line-height: 1.6;
+        }
+
+        /* Mac Terminal with Proper Left Alignment */
+        .terminal-container {
+            max-width: 800px;
+            margin: 0 auto 64px;
+            perspective: 1000px;
+        }
+
+        .terminal {
+            background: var(--terminal-bg);
+            border: 1px solid var(--terminal-border);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            font-family: 'JetBrains Mono', monospace;
+            transform: rotateX(2deg) rotateY(-2deg);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .terminal:hover {
+            transform: rotateX(0deg) rotateY(0deg) scale(1.02);
+            box-shadow: 0 30px 80px rgba(0, 0, 0, 0.2);
+        }
+
+        .terminal-header {
+            background: linear-gradient(135deg, #e5e5e7, #d1d1d6);
+            height: 44px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            border-bottom: 1px solid var(--terminal-border);
+        }
+
+        .terminal-controls {
+            display: flex;
+            gap: 8px;
+        }
+
+        .terminal-btn {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .terminal-btn:hover {
+            transform: scale(1.1);
+        }
+
+        .terminal-btn.close { 
+            background: linear-gradient(135deg, #ff6058, #ff3b30);
+        }
+        .terminal-btn.minimize { 
+            background: linear-gradient(135deg, #ffbd2e, #ff9500);
+        }
+        .terminal-btn.maximize { 
+            background: linear-gradient(135deg, #28ca42, #34c759);
+        }
+
+        .terminal-title {
+            flex: 1;
+            text-align: center;
+            font-size: 13px;
+            color: #6e6e73;
+            font-weight: 600;
+        }
+
+        .terminal-body {
+            padding: 24px;
+            font-size: 14px;
+            line-height: 1.6;
+            color: #1d1d1f;
+            background: var(--terminal-bg);
+            text-align: left; /* PROPER LEFT ALIGNMENT */
+        }
+
+        .terminal-line {
+            margin-bottom: 6px;
+            opacity: 0;
+            transform: translateX(-20px);
+            animation: slideInType 0.6s ease-out forwards;
+        }
+
+        .terminal-line:nth-child(1) { animation-delay: 0.8s; }
+        .terminal-line:nth-child(2) { animation-delay: 1.4s; }
+        .terminal-line:nth-child(3) { animation-delay: 2.0s; }
+        .terminal-line:nth-child(4) { animation-delay: 2.6s; }
+        .terminal-line:nth-child(5) { animation-delay: 3.2s; }
+        .terminal-line:nth-child(6) { animation-delay: 3.8s; }
+
+        @keyframes slideInType {
+            to { 
+                opacity: 1; 
+                transform: translateX(0);
+            }
+        }
+
+        .prompt {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .command {
+            color: #34c759;
+            font-weight: 500;
+        }
+
+        .output {
+            color: #6e6e73;
+            padding-left: 20px;
+        }
+
+        .threat {
+            color: #ff3b30;
+            font-weight: 700;
+        }
+
+        .warning {
+            color: #ff9500;
+            font-weight: 600;
+        }
+
+        .success {
+            color: #34c759;
+            font-weight: 600;
+        }
+
+        /* Creative Glass Buttons */
+        .cta-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 16px 32px;
+            border-radius: 16px;
+            text-decoration: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            border: none;
+            cursor: pointer;
+            display: inline-block;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.6s;
+        }
+
+        .btn:hover::before {
+            left: 100%;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+            color: white;
+            box-shadow: 0 8px 32px rgba(0, 122, 255, 0.3);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-4px) scale(1.02);
+            box-shadow: 0 12px 48px rgba(0, 122, 255, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(20px);
+            color: var(--primary);
+            border: 1px solid var(--glass-border);
+            box-shadow: 0 8px 32px var(--shadow);
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-4px) scale(1.02);
+            background: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 12px 48px var(--shadow);
+        }
+
+        /* Animated Section Headers */
+        .section {
+            padding: 120px 24px;
+            position: relative;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 80px;
+        }
+
+        .section-eyebrow {
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 30px;
+            padding: 8px 24px;
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent);
+            margin-bottom: 24px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .section-title {
+            font-size: clamp(40px, 8vw, 72px);
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 24px;
+            line-height: 1.1;
+        }
+
+        .section-subtitle {
+            font-size: clamp(18px, 3vw, 24px);
+            color: var(--secondary);
+            max-width: 700px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }
+
+        /* Glass Cards Grid */
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 32px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: saturate(180%) blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 40px 32px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 8px 32px var(--shadow);
+        }
+
+        .glass-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+        }
+
+        .glass-card:hover {
+            transform: translateY(-12px) scale(1.02);
+            background: rgba(255, 255, 255, 0.35);
+            box-shadow: 0 20px 60px rgba(31, 38, 135, 0.15);
+        }
+
+        .card-icon {
+            width: 64px;
+            height: 64px;
+            border-radius: 16px;
+            background: var(--gradient-1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 28px;
+            margin-bottom: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .glass-card:nth-child(2) .card-icon {
+            background: var(--gradient-2);
+        }
+
+        .glass-card:nth-child(3) .card-icon {
+            background: var(--gradient-3);
+        }
+
+        .glass-card:hover .card-icon {
+            transform: scale(1.1) rotate(5deg);
+        }
+
+        .card-title {
+            font-size: 22px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 16px;
+        }
+
+        .card-description {
+            font-size: 16px;
+            color: var(--secondary);
+            line-height: 1.6;
+        }
+
+        /* Interactive Stats */
+        .stats-section {
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.05), rgba(118, 75, 162, 0.03));
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 32px;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .stat-card {
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(30px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 32px 24px;
+            text-align: center;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+            transform: rotate(45deg);
+            transition: all 0.6s;
+            opacity: 0;
+        }
+
+        .stat-card:hover::before {
+            animation: shine 0.6s ease-in-out;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); opacity: 0; }
+        }
+
+        .stat-card:hover {
+            transform: translateY(-8px);
+            background: rgba(255, 255, 255, 0.5);
+        }
+
+        .stat-number {
+            font-size: 36px;
+            font-weight: 800;
+            background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .stat-label {
+            font-size: 14px;
+            color: var(--secondary);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* How It Works Timeline */
+        .timeline {
+            max-width: 1000px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 50%;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: linear-gradient(180deg, var(--accent), var(--accent-purple), var(--accent-pink));
+            transform: translateX(-50%);
+        }
+
+        .timeline-item {
+            display: flex;
+            margin: 60px 0;
+            position: relative;
+        }
+
+        .timeline-item:nth-child(even) {
+            flex-direction: row-reverse;
+        }
+
+        .timeline-content {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.3);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--glass-border);
+            border-radius: 20px;
+            padding: 32px;
+            margin: 0 40px;
+            box-shadow: 0 8px 32px var(--shadow);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .timeline-content:hover {
+            transform: scale(1.02);
+            background: rgba(255, 255, 255, 0.4);
+        }
+
+        .timeline-number {
+            position: absolute;
+            left: 50%;
+            top: 20px;
+            transform: translateX(-50%);
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+            box-shadow: 0 4px 16px rgba(0, 122, 255, 0.3);
+        }
+
+        .timeline-title {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 12px;
+        }
+
+        .timeline-desc {
+            font-size: 16px;
+            color: var(--secondary);
+            line-height: 1.6;
+        }
+
+        /* Download Section with Animated Background */
+        .download-section {
+            background: linear-gradient(135deg, rgba(0, 122, 255, 0.1), rgba(88, 86, 214, 0.05));
+            position: relative;
+            overflow: hidden;
+        }
+
+        .download-section::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.03), transparent);
+            animation: backgroundShift 8s linear infinite;
+        }
+
+        @keyframes backgroundShift {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+        }
+
+        /* Footer */
+        footer {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: saturate(180%) blur(20px);
+            border-top: 1px solid rgba(0, 0, 0, 0.08);
+            padding: 60px 24px 40px;
+            text-align: center;
+        }
+
+        .footer-content {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .footer-links a {
+            color: var(--secondary);
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .footer-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+
+        .footer-links a:hover {
+            color: var(--accent);
+        }
+
+        .footer-links a:hover::after {
+            width: 100%;
+        }
+
+        .copyright {
+            font-size: 14px;
+            color: var(--secondary);
+            margin-top: 24px;
+        }
+
+        /* Smooth Scroll Animation Classes */
+        .animate-in {
+            opacity: 0;
+            transform: translateY(50px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .animate-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .animate-scale {
+            opacity: 0;
+            transform: scale(0.8);
+            transition: all 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .animate-scale.visible {
+            opacity: 1;
+            transform: scale(1);
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .nav-links {
+                gap: 20px;
+            }
+
+            .nav-links a {
+                font-size: 14px;
+                padding: 10px 12px;
+            }
+
+            .hero {
+                padding: 120px 16px 60px;
+            }
+
+            .hero-title {
+                font-size: 64px;
+            }
+
+            .section {
+                padding: 80px 16px;
+            }
+
+            .cards-grid {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 20px;
+            }
+
+            .timeline::before {
+                left: 30px;
+            }
+
+            .timeline-item {
+                flex-direction: row !important;
+                margin-left: 60px;
+            }
+
+            .timeline-number {
+                left: 30px;
+            }
+
+            .timeline-content {
+                margin: 0 0 0 40px;
+            }
+
+            .cta-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn {
+                min-width: 250px;
+            }
+
+            .terminal-container {
+                margin: 0 16px 48px;
+            }
+
+            .terminal-body {
+                padding: 20px 16px;
+                font-size: 12px;
+            }
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: linear-gradient(180deg, var(--accent), var(--accent-purple));
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: linear-gradient(180deg, var(--accent-purple), var(--accent-pink));
+        }
+
+        /* Enhanced smooth scrolling */
+        html, body {
+            scroll-behavior: smooth;
+        }
+
+        * {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-canvas">
+        <!-- Floating glass elements -->
+        <div class="floating-glass glass-1"></div>
+        <div class="floating-glass glass-2"></div>
+        <div class="floating-glass glass-3"></div>
+        <div class="floating-glass glass-4"></div>
+        
+        <!-- Gradient orbs -->
+        <div class="gradient-orb orb-3"></div>
+    </div>
+
+    <nav>
+        <ul class="nav-links">
+            <li><a href="#features">Features</a></li>
+            <li><a href="#how-it-works">How It Works</a></li>
+            <li><a href="#stats">Stats</a></li>
+            <li><a href="#download">Download</a></li>
+            <li><a href="https://github.com" target="_blank">GitHub</a></li>
+        </ul>
+    </nav>
+
+    <section class="hero">
+        <div class="hero-content">
+            <div class="hero-badge animate-scale">🛡️ Mobile Security Solution</div>
+            <h1 class="hero-title animate-in">Fortify</h1>
+            <p class="hero-subtitle animate-in">Next-generation mobile threat detection</p>
+            <p class="hero-description animate-in">
+                Advanced APK analysis, real-time message scanning, and intelligent threat prevention 
+                for Android devices. Powered by machine learning and behavioral analysis.
+            </p>
+
+            <div class="terminal-container animate-scale">
+                <div class="terminal">
+                    <div class="terminal-header">
+                        <div class="terminal-controls">
+                            <div class="terminal-btn close"></div>
+                            <div class="terminal-btn minimize"></div>
+                            <div class="terminal-btn maximize"></div>
+                        </div>
+                        <div class="terminal-title">Fortify Security Analysis</div>
+                    </div>
+                    <div class="terminal-body">
+                        <div class="terminal-line"><span class="prompt">user@fortify</span>:~$ <span class="command">fortify --scan malicious_app.apk</span></div>
+                        <div class="terminal-line"><span class="output">→ Decompiling APK and analyzing bytecode...</span></div>
+                        <div class="terminal-line"><span class="threat">[!] THREAT: Data harvesting code detected</span></div>
+                        <div class="terminal-line"><span class="warning">[!] SUSPICIOUS: Unauthorized camera access</span></div>
+                        <div class="terminal-line"><span class="warning">[!] RISK: Encrypted payload in assets/</span></div>
+                        <div class="terminal-line"><span class="success">✓ Analysis complete - 3 threats neutralized</span></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cta-buttons animate-in">
+                <a href="#download" class="btn btn-primary">Download Fortify</a>
+                <a href="https://github.com" class="btn btn-secondary">View Source Code</a>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="features">
+        <div class="section-header">
+            <div class="section-eyebrow animate-scale">Core Features</div>
+            <h2 class="section-title animate-in">Comprehensive Protection</h2>
+            <p class="section-subtitle animate-in">
+                Multi-layered security analysis using advanced algorithms and machine learning 
+                to detect and prevent mobile threats before they can cause damage.
+            </p>
+        </div>
+
+        <div class="cards-grid">
+            <div class="glass-card animate-in">
+                <div class="card-icon">🔍</div>
+                <h3 class="card-title">Deep APK Analysis</h3>
+                <p class="card-description">
+                    Comprehensive decompilation and static analysis of Android applications. 
+                    We examine bytecode, manifest permissions, native libraries, and hidden payloads 
+                    to identify malicious behavior patterns.
+                </p>
+            </div>
+
+            <div class="glass-card animate-in">
+                <div class="card-icon">💬</div>
+                <h3 class="card-title">Smart Message Filtering</h3>
+                <p class="card-description">
+                    Real-time analysis of SMS, messaging apps, and social media communications. 
+                    Our NLP engine detects phishing attempts, malicious links, and social engineering tactics.
+                </p>
+            </div>
+
+            <div class="glass-card animate-in">
+                <div class="card-icon">🧠</div>
+                <h3 class="card-title">Behavioral Analysis</h3>
+                <p class="card-description">
+                    Machine learning models monitor app behavior in real-time, detecting anomalies 
+                    and suspicious activities that signature-based scanners miss.
+                </p>
+            </div>
+
+            <div class="glass-card animate-in">
+                <div class="card-icon">⚡</div>
+                <h3 class="card-title">Zero-Day Protection</h3>
+                <p class="card-description">
+                    Proactive threat detection using heuristic analysis and behavioral patterns 
+                    to identify previously unknown malware and attack vectors.
+                </p>
+            </div>
+
+            <div class="glass-card animate-in">
+                <div class="card-icon">🔒</div>
+                <h3 class="card-title">Privacy Shield</h3>
+                <p class="card-description">
+                    Monitor and block unauthorized access to sensitive data including contacts, 
+                    location, camera, microphone, and personal files.
+                </p>
+            </div>
+
+            <div class="glass-card animate-in">
+                <div class="card-icon">📊</div>
+                <h3 class="card-title">Threat Intelligence</h3>
+                <p class="card-description">
+                    Real-time threat feeds and security updates from global cybersecurity networks 
+                    to stay ahead of emerging attack patterns.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section class="section stats-section" id="stats">
+        <div class="section-header">
+            <div class="section-eyebrow animate-scale">Performance Metrics</div>
+            <h2 class="section-title animate-in">Proven Results</h2>
+            <p class="section-subtitle animate-in">
+                Our advanced security engine delivers industry-leading protection rates 
+                while maintaining optimal device performance.
+            </p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card animate-scale">
+                <span class="stat-number">99.8%</span>
+                <div class="stat-label">Threat Detection</div>
+            </div>
+            <div class="stat-card animate-scale">
+                <span class="stat-number">250K+</span>
+                <div class="stat-label">APKs Analyzed</div>
+            </div>
+            <div class="stat-card animate-scale">
+                <span class="stat-number">50M+</span>
+                <div class="stat-label">Messages Scanned</div>
+            </div>
+            <div class="stat-card animate-scale">
+                <span class="stat-number">&lt;1s</span>
+                <div class="stat-label">Scan Time</div>
+            </div>
+            <div class="stat-card animate-scale">
+                <span class="stat-number">0%</span>
+                <div class="stat-label">False Positives</div>
+            </div>
+            <div class="stat-card animate-scale">
+                <span class="stat-number">24/7</span>
+                <div class="stat-label">Protection</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section" id="how-it-works">
+        <div class="section-header">
+            <div class="section-eyebrow animate-scale">Security Process</div>
+            <h2 class="section-title animate-in">How Fortify Works</h2>
+            <p class="section-subtitle animate-in">
+                Our multi-stage security pipeline combines static analysis, dynamic monitoring, 
+                and machine learning to provide comprehensive protection.
+            </p>
+        </div>
+
+        <div class="timeline">
+            <div class="timeline-item animate-in">
+                <div class="timeline-content">
+                    <h3 class="timeline-title">APK Submission & Decompilation</h3>
+                    <p class="timeline-desc">
+                        Upload your APK through our secure interface. Our decompilation engine extracts 
+                        source code, resources, and metadata for comprehensive analysis.
+                    </p>
+                </div>
+                <div class="timeline-number">1</div>
+            </div>
+
+            <div class="timeline-item animate-in">
+                <div class="timeline-content">
+                    <h3 class="timeline-title">Static Code Analysis</h3>
+                    <p class="timeline-desc">
+                        Advanced static analysis examines code patterns, API calls, permission usage, 
+                        and obfuscation techniques to identify potential security risks.
+                    </p>
+                </div>
+                <div class="timeline-number">2</div>
+            </div>
+
+            <div class="timeline-item animate-in">
+                <div class="timeline-content">
+                    <h3 class="timeline-title">Behavioral Monitoring</h3>
+                    <p class="timeline-desc">
+                        Real-time monitoring of app behavior, network communications, and system interactions 
+                        to detect malicious activities during runtime.
+                    </p>
+                </div>
+                <div class="timeline-number">3</div>
+            </div>
+
+            <div class="timeline-item animate-in">
+                <div class="timeline-content">
+                    <h3 class="timeline-title">ML-Powered Classification</h3>
+                    <p class="timeline-desc">
+                        Machine learning models trained on millions of samples classify threats 
+                        and provide confidence scores for security decisions.
+                    </p>
+                </div>
+                <div class="timeline-number">4</div>
+            </div>
+
+            <div class="timeline-item animate-in">
+                <div class="timeline-content">
+                    <h3 class="timeline-title">Threat Response & Mitigation</h3>
+                    <p class="timeline-desc">
+                        Automatic threat neutralization, user notifications, and security recommendations 
+                        based on risk assessment and threat intelligence.
+                    </p>
+                </div>
+                <div class="timeline-number">5</div>
+            </div>
+        </div>
+    </section>
+
+    <section class="section download-section" id="download">
+        <div class="section-header">
+            <div class="section-eyebrow animate-scale">Get Started</div>
+            <h2 class="section-title animate-in">Download Fortify</h2>
+            <p class="section-subtitle animate-in">
+                Join thousands of users who trust Fortify to protect their mobile devices. 
+                Available for Android with regular security updates and new features.
+            </p>
+        </div>
+
+        <div class="cta-buttons animate-in" style="margin-top: 48px;">
+            <a href="#" class="btn btn-primary">Download for Android</a>
+            <a href="https://github.com" class="btn btn-secondary">Contribute on GitHub</a>
+        </div>
+
+        <div class="stats-grid" style="margin-top: 80px;">
+            <div class="stat-card animate-scale">
+                <span class="stat-number">5★</span>
+                <div class="stat-label">User Rating</div>
+            </div>
+            <div class="stat-card animate-scale">
+                <span class="stat-number">100K+</span>
+                <div class="stat-label">Downloads</div>
+            </div>
+            <div class="stat-card animate-scale">
+                <span class="stat-number">Free</span>
+                <div class="stat-label">Open Source</div>
+            </div>
+            <div class="stat-card animate-scale">
+                <span class="stat-number">Daily</span>
+                <div class="stat-label">Updates</div>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-content">
+            <div class="footer-links">
+                <a href="#">Privacy Policy</a>
+                <a href="#">Security</a>
+                <a href="#">Documentation</a>
+                <a href="#">API Reference</a>
+                <a href="#">Community</a>
+                <a href="#">Support</a>
+                <a href="#">Blog</a>
+                <a href="#">Contact</a>
+            </div>
+            <div class="copyright">
+                © 2025 Fortify Security. Advanced mobile protection for everyone. 
+                Built with ❤️ by security researchers.
+            </div>
+        </div>
+    </footer>
+
+    <script>
+        // Enhanced smooth scrolling with easing
+        function smoothScrollTo(element, duration = 1000) {
+            const targetPosition = element.getBoundingClientRect().top + window.pageYOffset - 80;
+            const startPosition = window.pageYOffset;
+            const distance = targetPosition - startPosition;
+            let startTime = null;
+
+            function animation(currentTime) {
+                if (startTime === null) startTime = currentTime;
+                const timeElapsed = currentTime - startTime;
+                const run = easeInOutCubic(timeElapsed, startPosition, distance, duration);
+                window.scrollTo(0, run);
+                if (timeElapsed < duration) requestAnimationFrame(animation);
+            }
+
+            function easeInOutCubic(t, b, c, d) {
+                t /= d / 2;
+                if (t < 1) return c / 2 * t * t * t + b;
+                t -= 2;
+                return c / 2 * (t * t * t + 2) + b;
+            }
+
+            requestAnimationFrame(animation);
+        }
+
+        // Apply smooth scrolling to all anchor links
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    smoothScrollTo(target, 800);
+                }
+            });
+        });
+
+        // Intersection Observer for scroll animations
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -100px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('visible');
+                }
+            });
+        }, observerOptions);
+
+        // Observe all animation elements
+        document.querySelectorAll('.animate-in, .animate-scale').forEach(el => {
+            observer.observe(el);
+        });
+
+        // Parallax effect for floating elements
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const rate = scrolled * -0.5;
+            const rate2 = scrolled * -0.3;
+            const rate3 = scrolled * -0.7;
+
+            document.querySelector('.glass-1').style.transform = `translateY(${rate}px)`;
+            document.querySelector('.glass-2').style.transform = `translateY(${rate2}px)`;
+            document.querySelector('.glass-3').style.transform = `translateY(${rate3}px)`;
+        });
+
+        // Enhanced navigation effects
+        let lastScrollY = 0;
+        let ticking = false;
+
+        function updateNav() {
+            const nav = document.querySelector('nav');
+            const scrollY = window.scrollY;
+            
+            if (scrollY > 100) {
+                nav.style.background = 'rgba(255, 255, 255, 0.35)';
+                nav.style.transform = 'translateX(-50%) scale(0.95)';
+            } else {
+                nav.style.background = 'rgba(255, 255, 255, 0.25)';
+                nav.style.transform = 'translateX(-50%) scale(1)';
+            }
+            
+            lastScrollY = scrollY;
+            ticking = false;
+        }
+
+        function requestTick() {
+            if (!ticking) {
+                requestAnimationFrame(updateNav);
+                ticking = true;
+            }
+        }
+
+        window.addEventListener('scroll', requestTick);
+
+        // Interactive button effects
+        document.querySelectorAll('.btn').forEach(btn => {
+            btn.addEventListener('mouseenter', function() {
+                this.style.transform = 'translateY(-4px) scale(1.02)';
+            });
+            
+            btn.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1)';
+            });
+            
+            btn.addEventListener('mousedown', function() {
+                this.style.transform = 'translateY(-2px) scale(0.98)';
+            });
+            
+            btn.addEventListener('mouseup', function() {
+                this.style.transform = 'translateY(-4px) scale(1.02)';
+            });
+        });
+
+        // Glass card tilt effect
+        document.querySelectorAll('.glass-card').forEach(card => {
+            card.addEventListener('mousemove', function(e) {
+                const rect = this.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                
+                const rotateX = (y - centerY) / 10;
+                const rotateY = (centerX - x) / 10;
+                
+                this.style.transform = `translateY(-12px) scale(1.02) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            });
+            
+            card.addEventListener('mouseleave', function() {
+                this.style.transform = 'translateY(0) scale(1) rotateX(0deg) rotateY(0deg)';
+            });
+        });
+
+        // Terminal typing animation trigger
+        const terminalObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const lines = entry.target.querySelectorAll('.terminal-line');
+                    lines.forEach((line, index) => {
+                        setTimeout(() => {
+                            line.style.opacity = '1';
+                            line.style.transform = 'translateX(0)';
+                        }, index * 600 + 800);
+                    });
+                }
+            });
+        }, { threshold: 0.5 });
+
+        const terminal = document.querySelector('.terminal-body');
+        if (terminal) {
+            terminalObserver.observe(terminal);
+        }
+
+        // Stats counter animation
+        function animateCounter(element, start, end, duration) {
+            let startTimestamp = null;
+            const step = (timestamp) => {
+                if (!startTimestamp) startTimestamp = timestamp;
+                const progress = Math.min((timestamp - startTimestamp) / duration, 1);
+                const current = Math.floor(progress * (end - start) + start);
+                element.textContent = current.toLocaleString();
+                if (progress < 1) {
+                    window.requestAnimationFrame(step);
+                }
+            };
+            window.requestAnimationFrame(step);
+        }
+
+        // Trigger counter animations when stats section is visible
+        const statsObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    const statNumbers = entry.target.querySelectorAll('.stat-number');
+                    statNumbers.forEach(stat => {
+                        const text = stat.textContent;
+                        if (text.includes('K')) {
+                            const num = parseInt(text.replace('K+', ''));
+                            stat.textContent = '0';
+                            setTimeout(() => animateCounter(stat, 0, num, 2000), 500);
+                            setTimeout(() => stat.textContent = text, 2500);
+                        } else if (text.includes('M')) {
+                            const num = parseInt(text.replace('M+', ''));
+                            stat.textContent = '0';
+                            setTimeout(() => animateCounter(stat, 0, num, 2000), 500);
+                            setTimeout(() => stat.textContent = text, 2500);
+                        }
+                    });
+                }
+            });
+        }, { threshold: 0.3 });
+
+        document.querySelectorAll('.stats-section').forEach(section => {
+            statsObserver.observe(section);
+        });
+
+        // Add ripple effect to cards
+        document.querySelectorAll('.glass-card, .stat-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                const ripple = document.createElement('span');
+                const rect = this.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const x = e.clientX - rect.left - size / 2;
+                const y = e.clientY - rect.top - size / 2;
+                
+                ripple.style.width = ripple.style.height = size + 'px';
+                ripple.style.left = x + 'px';
+                ripple.style.top = y + 'px';
+                ripple.classList.add('ripple');
+                
+                this.appendChild(ripple);
+                
+                setTimeout(() => {
+                    ripple.remove();
+                }, 600);
+            });
+        });
+
+        // Add ripple CSS
+        const style = document.createElement('style');
+        style.textContent = `
+            .ripple {
+                position: absolute;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.6);
+                transform: scale(0);
+                animation: ripple-animation 0.6s linear;
+                pointer-events: none;
+            }
+            
+            @keyframes ripple-animation {
+                to {
+                    transform: scale(4);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>b orb-1"></div>
+        <div class="gradient-orb orb-2"></div>
+        <div class="gradient-or
