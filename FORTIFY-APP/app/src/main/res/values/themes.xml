@@ -4,6 +4,8 @@
         <!-- We use the colors you defined in colors.xml -->
         <item name="android:windowBackground">@color/app_background</item>
         <item name="colorPrimary">@color/button_background</item>
+        <item name="android:fontFamily">@font/jetbrains_mono</item>
+
     </style>
 
     <!-- 2. Special Theme for the Splash Screen -->

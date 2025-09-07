@@ -11,8 +11,8 @@ init()
 
 # --- Configuration ---
 # Set the absolute path to your JADX executable here. This is required for the malware scanner.
-#JADX_EXECUTABLE_PATH = "D:\\jadx\\bin\\jadx.bat"
-JADX_EXECUTABLE_PATH = "/usr/local/bin/jadx"
+JADX_EXECUTABLE_PATH = "D:\\jadx\\bin\\jadx.bat"
+# JADX_EXECUTABLE_PATH = "/usr/local/bin/jadx"
 
 def print_log(message, level="info"):
     """Prints a log message with the core's standard format."""

@@ -8,70 +8,82 @@
     android:padding="24dp"
     tools:context=".MainActivity">
 
-    <TextView
-        android:id="@+id/titleTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="60dp"
-        android:text="Fortify Security"
-        android:textColor="@color/text_primary"
-        android:textSize="34sp"
-        android:textStyle="bold"
+    <!-- App Logo -->
+    <ImageView
+        android:id="@+id/logoImageView"
+        android:layout_width="254dp"
+        android:layout_height="206dp"
+        android:src="@drawable/ic_splash_logo3"
+        app:layout_constraintBottom_toTopOf="@+id/serverUrlEditText"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_chainStyle="packed" /> <!-- Groups all chained items together -->
 
+    <!-- Server URL Input -->
+
+    <!-- Username Input -->
     <EditText
         android:id="@+id/serverUrlEditText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="48dp"
-        android:backgroundTint="@color/text_secondary"
-        android:hint="Server URL"
+        android:layout_marginTop="32dp"
+        android:background="@drawable/edittext_background"
+        android:hint="Enter Server URL"
         android:inputType="textUri"
+        android:padding="16dp"
         android:textColor="@color/text_primary"
         android:textColorHint="@color/text_secondary"
+        app:layout_constraintBottom_toTopOf="@+id/usernameEditText"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/titleTextView" />
+        app:layout_constraintTop_toBottomOf="@+id/logoImageView" />
 
     <EditText
         android:id="@+id/usernameEditText"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
-        android:backgroundTint="@color/text_secondary"
-        android:hint="Username"
+        android:layout_marginTop="16dp"
+        android:background="@drawable/edittext_background"
+        android:hint="Enter Username"
         android:inputType="textPersonName"
+        android:padding="16dp"
         android:textColor="@color/text_primary"
         android:textColorHint="@color/text_secondary"
+        app:layout_constraintBottom_toTopOf="@+id/proceedButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/serverUrlEditText" />
+        app:layout_constraintTop_toBottomOf="@+id/serverUrlEditText" />
 
+    <!-- Proceed Button -->
     <Button
         android:id="@+id/proceedButton"
-        android:layout_width="0dp"
-        android:layout_height="60dp"
-        android:layout_marginTop="32dp"
+        android:layout_width="206dp"
+        android:layout_height="67dp"
+        android:layout_marginTop="16dp"
         android:backgroundTint="@color/button_background"
+        android:paddingVertical="12dp"
         android:text="Proceed"
         android:textColor="@color/text_primary"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/usernameEditText" />
+        app:layout_constraintTop_toBottomOf="@+id/usernameEditText" />
 
+    <!-- Loading Indicator -->
     <ProgressBar
         android:id="@+id/loadingProgressBar"
         style="?android:attr/progressBarStyle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_marginTop="16dp"
-        android:indeterminateTint="@color/text_primary"
         android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.498"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/proceedButton"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.483"
         tools:visibility="visible" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
