@@ -3,7 +3,8 @@ import sys
 import random
 import sqlite3
 import logging
-from flask import Flask, request, jsonify
+import json
+from flask import Flask, request, jsonify, send_from_directory
 from colorama import Fore, Style, init
 
 import jwt
@@ -181,6 +182,34 @@ def seeDbs():
     print_log("Database records retrieved via /seeDbs endpoint.")
     return jsonify(all_jobs), 200
 
+@app.route('/getScanDetails', methods=['GET'])
+def get_scan_details():
+    """Fetches the full JSON report file for a given job ID."""
+    job_id = request.args.get('jobID')
+    if not job_id:
+        return jsonify({"error": "jobID parameter is required"}), 400
+
+    report_filename = f"{job_id}.json"
+    report_path = os.path.join(OUTPUT_FOLDER, report_filename)
+
+    if not os.path.exists(report_path):
+        return jsonify({"error": "Detailed report not found for this job ID"}), 404
+
+    try:
+        # --- THIS IS THE FIX ---
+        # Instead of using send_from_directory, we will open the file,
+        # read the JSON content, and return it directly. This is more reliable.
+        with open(report_path, 'r', encoding='utf-8') as f:
+            report_data = json.load(f)
+        
+        print_log(f"Detailed report for Job ID {job_id} retrieved.")
+        return jsonify(report_data)
+        # --- END OF FIX ---
+        
+    except Exception as e:
+        print_log(f"Error reading report file for job {job_id}: {e}", level="error")
+        return jsonify({"error": "Failed to read or parse the report file"}), 500
+
 if __name__ == '__main__':
     print_log("Starting backend server on http://127.0.0.1:5000")
-    app.run(host='0.0.0.0', port=5000)
+    app.run(host='0.0.0.0', port=5000)  

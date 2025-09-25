@@ -43,6 +43,8 @@
         <activity android:name=".HomeActivity" />
         <activity android:name=".ScanApkActivity" />
         <activity android:name=".ScanMessageActivity" />
+        <activity android:name=".ScanDetailsActivity" />
+
 
     </application>
 

@@ -37,7 +37,6 @@ class ScanApkActivity : AppCompatActivity() {
     private val handler = Handler(Looper.getMainLooper())
     private val pollingRunnables = mutableMapOf<String, Runnable>()
 
-    // This launcher handles the result from the file picker
     private val filePickerLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
         if (result.resultCode == Activity.RESULT_OK) {
             result.data?.data?.let { uri ->
@@ -50,13 +49,18 @@ class ScanApkActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_scan_apk)
 
-        // Bind views and initialize components
         bindViews()
         client = OkHttpClient()
         sharedPreferences = getSharedPreferences("FortifyPrefs", Context.MODE_PRIVATE)
 
-        // Setup the RecyclerView
-        scanJobAdapter = ScanJobAdapter(mutableListOf())
+        scanJobAdapter = ScanJobAdapter(mutableListOf()) { clickedJob ->
+            val intent = Intent(this, ScanDetailsActivity::class.java).apply {
+                putExtra("JOB_ID", clickedJob.jobId)
+                putExtra("FILE_NAME", clickedJob.fileName)
+            }
+            startActivity(intent)
+        }
+
         scanJobsRecyclerView.adapter = scanJobAdapter
 
         selectApkButton.setOnClickListener {
@@ -70,14 +74,10 @@ class ScanApkActivity : AppCompatActivity() {
     }
 
     private fun openFilePicker() {
-        // --- THIS IS THE FIX ---
-        // We now use the more general ACTION_GET_CONTENT.
-        // This is more likely to show third-party file managers like Samsung's "My Files".
         val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
             type = "application/vnd.android.package-archive"
             addCategory(Intent.CATEGORY_OPENABLE)
         }
-        // --- END OF FIX ---
         filePickerLauncher.launch(intent)
     }
 
@@ -124,12 +124,18 @@ class ScanApkActivity : AppCompatActivity() {
             override fun onResponse(call: Call, response: Response) {
                 val responseBody = response.body?.string()
                 if (response.isSuccessful && responseBody != null) {
-                    val jsonObject = JSONObject(responseBody)
-                    val jobId = jsonObject.getString("jobID")
-                    runOnUiThread {
-                        scanJobAdapter.updateJobId("-1", jobId)
-                        scanJobAdapter.updateJobStatus(jobId, "Scanning...", R.color.card_background)
-                        startPolling(jobId)
+                    try {
+                        val jsonObject = JSONObject(responseBody)
+                        val jobId = jsonObject.getString("jobID")
+                        runOnUiThread {
+                            scanJobAdapter.updateJobId("-1", jobId)
+                            scanJobAdapter.updateJobStatus(jobId, "Scanning...", R.color.card_background)
+                            startPolling(jobId)
+                        }
+                    } catch (e: Exception) {
+                        runOnUiThread {
+                            Toast.makeText(applicationContext, "Failed to parse Job ID.", Toast.LENGTH_SHORT).show()
+                        }
                     }
                 } else {
                     runOnUiThread {
@@ -144,21 +150,24 @@ class ScanApkActivity : AppCompatActivity() {
         val serverUrl = sharedPreferences.getString("serverUrl", "")
         val jwtToken = sharedPreferences.getString("jwtToken", "")
 
-        val runnable = object : Runnable {
-            override fun run() {
-                val request = Request.Builder()
-                    .url("$serverUrl/scanStatus?jobID=$jobId")
-                    .header("Authorization", "Bearer $jwtToken")
-                    .build()
+        // --- THIS IS THE CORRECTED LOGIC ---
+        // We declare the runnable variable here so it can refer to itself inside the block
+        lateinit var runnable: Runnable
+        runnable = Runnable {
+            val request = Request.Builder()
+                .url("$serverUrl/scanStatus?jobID=$jobId")
+                .header("Authorization", "Bearer $jwtToken")
+                .build()
 
-                client.newCall(request).enqueue(object : Callback {
-                    override fun onFailure(call: Call, e: IOException) {
-                        Log.e("PollingError", "Failed for job $jobId: ${e.message}")
-                    }
+            client.newCall(request).enqueue(object : Callback {
+                override fun onFailure(call: Call, e: IOException) {
+                    Log.e("PollingError", "Failed for job $jobId: ${e.message}")
+                }
 
-                    override fun onResponse(call: Call, response: Response) {
-                        val responseBody = response.body?.string()
-                        if (response.isSuccessful && responseBody != null) {
+                override fun onResponse(call: Call, response: Response) {
+                    val responseBody = response.body?.string()
+                    if (response.isSuccessful && responseBody != null) {
+                        try {
                             val json = JSONObject(responseBody)
                             val details = json.getJSONObject("details")
                             val status = details.getString("STATUS")
@@ -173,13 +182,21 @@ class ScanApkActivity : AppCompatActivity() {
                                     scanJobAdapter.updateJobStatus(jobId, finalStatus, resultColor)
                                     pollingRunnables.remove(jobId)?.let { handler.removeCallbacks(it) }
                                 }
+                            } else {
+                                // If not done, schedule the next poll using the variable name
+                                handler.postDelayed(runnable, 10000)
                             }
+                        } catch (e: Exception) {
+                            handler.postDelayed(runnable, 10000)
                         }
+                    } else {
+                        handler.postDelayed(runnable, 10000)
                     }
-                })
-                handler.postDelayed(this, 10000)
-            }
+                }
+            })
         }
+        // --- END OF CORRECTION ---
+
         pollingRunnables[jobId] = runnable
         handler.post(runnable)
     }

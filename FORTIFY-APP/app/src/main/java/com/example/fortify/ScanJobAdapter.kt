@@ -11,13 +11,18 @@ import androidx.recyclerview.widget.RecyclerView
 // Data class to hold all info about a scan job
 data class ScanJob(
     val fileName: String,
-    var jobId: String, // Changed to var to allow updating
-    var status: String, // "Pending", "Scanning", "Clean", "Malicious(...)"
+    var jobId: String,
+    var status: String,
     var resultColor: Int
 )
 
-class ScanJobAdapter(private val scanJobs: MutableList<ScanJob>) :
-    RecyclerView.Adapter<ScanJobAdapter.ScanJobViewHolder>() {
+// --- THIS IS THE MAIN CHANGE ---
+// We've added an onItemClick lambda function to the constructor.
+// This is how the adapter will communicate clicks back to the activity.
+class ScanJobAdapter(
+    private val scanJobs: MutableList<ScanJob>,
+    private val onItemClick: (ScanJob) -> Unit
+) : RecyclerView.Adapter<ScanJobAdapter.ScanJobViewHolder>() {
 
     class ScanJobViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val fileNameTextView: TextView = view.findViewById(R.id.fileNameTextView)
@@ -38,21 +43,28 @@ class ScanJobAdapter(private val scanJobs: MutableList<ScanJob>) :
         holder.itemLayout.setBackgroundColor(
             ContextCompat.getColor(holder.itemView.context, job.resultColor)
         )
+
+        // --- THIS IS THE NEW CLICK LOGIC ---
+        // Set a click listener on the entire row view
+        holder.itemView.setOnClickListener {
+            // Only allow clicks if the scan is done
+            if (job.status != "Uploading..." && job.status != "Scanning...") {
+                onItemClick(job)
+            }
+        }
     }
 
     override fun getItemCount() = scanJobs.size
 
     fun addJob(job: ScanJob) {
-        scanJobs.add(0, job) // Add new jobs to the top of the list
+        scanJobs.add(0, job)
         notifyItemInserted(0)
     }
 
-    // --- THIS IS THE MISSING FUNCTION THAT HAS BEEN ADDED ---
     fun updateJobId(oldJobId: String, newJobId: String) {
         val index = scanJobs.indexOfFirst { it.jobId == oldJobId }
         if (index != -1) {
             scanJobs[index].jobId = newJobId
-            // We don't need to call notifyItemChanged here, as the ID is not visible in the UI
         }
     }
 
