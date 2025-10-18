@@ -1,1 +1,1 @@
-# **Fortify : Mobile Security Suite**
+# **Fortify : Mobile Security**
