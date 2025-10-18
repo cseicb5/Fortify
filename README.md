@@ -1,4 +1,4 @@
-# **Fortify : Mobile Security Suite (v2.0)**
+# **Fortify : Mobile Security Suite**
 
 ## **Setting up the Backend**
 
