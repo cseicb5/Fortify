@@ -2,7 +2,3 @@
 # Ignore the environemnt
 env/
 
-# Ignore the inputs and the outputs of testing
-server/INPUTS
-server/OUTPUT
-
