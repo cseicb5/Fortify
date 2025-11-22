@@ -13,14 +13,15 @@ The Mobile Application and Browser Extension are available in the build/ folder.
 
 Download fortify-server.tar and load it into Docker:
 
-docker load \-i fortify-server.tar
-
+```bash
+docker load -i fortify-server.tar
+```
 ### **2\. Run the Container**
 
 Start the platform by mapping the ports:
-
-docker run \-p 5000:5000 \-p 5001:5001 fortify-server
-
+```bash
+docker run -p 5000:5000 -p 5001:5001 fortify-server
+```
 ### **3\. Access the Dashboard**
 
 * **Frontend:** http://localhost:5001  
