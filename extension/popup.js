@@ -1,6 +1,3 @@
-// Advanced URL Security Analyzer with Blocklist Management
-// Cloudflare Zero Trust Theme
-
 // SVG Icon helper function
 function getIconSVG(iconName) {
   const icons = {
