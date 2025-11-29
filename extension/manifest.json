@@ -1,5 +1,5 @@
 {
-  "manifest_version": 2,
+  "manifest_version": 3,
   "name": "Fortify URL Checker",
   "version": "1.1",
   "description": "Blocks banned sites and checks current site for phishing signs and DNS info.",
@@ -7,26 +7,26 @@
   "permissions": [
     "tabs",
     "webNavigation",
-    "storage",
+    "storage"
+  ],
+
+  "host_permissions": [
     "<all_urls>",
-    "https://dns.google/" 
+    "https://dns.google/"
   ],
   
   "background": {
-    "scripts": ["background.js"],
-    "persistent": false
+    "service_worker": "background.js"
   },
-  
-  "browser_action": {
-    "default_popup": "popup.html",
-    "default_icon": "icon.png" 
+
+  "action": {
+    "default_popup": "popup.html"
   },
 
   "web_accessible_resources": [
-    "blocked.html"
-  ],
-
-  "icons": {
-    "48": "icon.png"
-  }
+    {
+      "resources": ["blocked.html"],
+      "matches": ["<all_urls>"]
+    }
+  ]
 }
