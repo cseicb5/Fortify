@@ -44,6 +44,7 @@
         <activity android:name=".ScanApkActivity" />
         <activity android:name=".ScanMessageActivity" />
         <activity android:name=".ScanDetailsActivity" />
+        <activity android:name=".MessageDetailsActivity" android:exported="false" />
 
 
     </application>

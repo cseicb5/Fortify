@@ -1,44 +1,47 @@
 package com.example.fortify
 
 import android.Manifest
+import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.SharedPreferences
+import android.content.IntentFilter
 import android.content.pm.PackageManager
 import android.os.Build
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.view.View
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import com.google.android.material.card.MaterialCardView
-import com.google.android.material.switchmaterial.SwitchMaterial
-import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
+import androidx.lifecycle.lifecycleScope // <--- NEW IMPORT
+import kotlinx.coroutines.launch // <--- NEW IMPORT
 
 class HomeActivity : AppCompatActivity() {
 
-    private lateinit var malwareScanCard: MaterialCardView
-    private lateinit var phishingScanCard: MaterialCardView
-    private lateinit var backgroundScanSwitch: SwitchMaterial
-    private lateinit var sharedPreferences: SharedPreferences
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var messageAdapter: MessageAdapter
+    private val messageList = mutableListOf<ScannedMessage>()
+
+    // This listens for updates from your ScanMessageService
+    private val liveUpdateReceiver = object : BroadcastReceiver() {
+        override fun onReceive(context: Context?, intent: Intent?) {
+            val jobId = intent?.getStringExtra("JOB_ID") ?: ""
+            val sender = intent?.getStringExtra("SENDER") ?: "Unknown"
+            val body = intent?.getStringExtra("BODY") ?: ""
+            val result = intent?.getStringExtra("RESULT") ?: "Error"
+
+            // Add the new message to the top of the UI
+            messageAdapter.addMessage(ScannedMessage(jobId, sender, body, result))
+            recyclerView.scrollToPosition(0)
+        }
+    }
 
     private val requestPermissionLauncher =
         registerForActivityResult(ActivityResultContracts.RequestMultiplePermissions()) { permissions ->
             val smsGranted = permissions[Manifest.permission.RECEIVE_SMS] ?: false
-            val notificationsGranted = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-                permissions[Manifest.permission.POST_NOTIFICATIONS] ?: false
-            } else {
-                true
-            }
-
-            if (smsGranted && notificationsGranted) {
-                Toast.makeText(this, "Background Sentinel Active", Toast.LENGTH_SHORT).show()
-                sharedPreferences.edit().putBoolean("backgroundScanEnabled", true).apply()
-            } else {
-                Toast.makeText(this, "Permissions required for monitoring.", Toast.LENGTH_LONG).show()
-                backgroundScanSwitch.isChecked = false
-                sharedPreferences.edit().putBoolean("backgroundScanEnabled", false).apply()
+            if (!smsGranted) {
+                Toast.makeText(this, "Fortify cannot protect you without SMS permissions.", Toast.LENGTH_LONG).show()
             }
         }
 
@@ -46,70 +49,61 @@ class HomeActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_home)
 
-        sharedPreferences = getSharedPreferences("FortifyPrefs", Context.MODE_PRIVATE)
+        // Setup the list UI structure
+        recyclerView = findViewById(R.id.liveFeedRecyclerView)
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        messageAdapter = MessageAdapter(messageList)
+        recyclerView.adapter = messageAdapter
 
-        malwareScanCard = findViewById(R.id.malwareScanCard)
-        phishingScanCard = findViewById(R.id.phishingScanCard)
-        backgroundScanSwitch = findViewById(R.id.backgroundScanSwitch)
+        // ==========================================
+        // NEW: LOAD HISTORY FROM ROOM DATABASE
+        // ==========================================
+        val db = AppDatabase.getDatabase(this)
+        lifecycleScope.launch {
+            // Fetch old messages (the DAO is already ordered by timestamp)
+            val oldMessages = db.messageDao().getAllMessages()
 
-        // --- UI CLEANUP ---
-        // Hiding APK scanning UI to focus on Phishing Sentinel
-        malwareScanCard.visibility = View.GONE
+            messageList.clear() // Clear default list just in case
 
-        phishingScanCard.setOnClickListener {
-            startActivity(Intent(this, ScanMessageActivity::class.java))
-        }
-
-        // --- SWITCH LOGIC WITH CONFIRMATION ---
-        val isEnabled = sharedPreferences.getBoolean("backgroundScanEnabled", false)
-        backgroundScanSwitch.isChecked = isEnabled
-
-        backgroundScanSwitch.setOnCheckedChangeListener { buttonView, isChecked ->
-            if (isChecked) {
-                // Only show dialog if the change was triggered by a user touch
-                if (buttonView.isPressed) {
-                    showBackgroundConfirmation()
-                }
-            } else {
-                sharedPreferences.edit().putBoolean("backgroundScanEnabled", false).apply()
-                Toast.makeText(this, "Background monitoring disabled.", Toast.LENGTH_SHORT).show()
+            // Convert database entities back into UI objects
+            oldMessages.forEach { entity ->
+                messageList.add(ScannedMessage(entity.jobId, entity.sender, entity.messageBody, entity.result))
             }
+
+            // Tell the screen to redraw with the saved data
+            messageAdapter.notifyDataSetChanged()
+        }
+        // ==========================================
+
+        // Force request permissions on launch
+        checkAndRequestPermissions()
+
+        // Register the broadcast receiver so the UI updates live
+        val filter = IntentFilter("com.fortify.LIVE_UPDATE")
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            registerReceiver(liveUpdateReceiver, filter, RECEIVER_EXPORTED)
+        } else {
+            registerReceiver(liveUpdateReceiver, filter)
         }
     }
 
-    private fun showBackgroundConfirmation() {
-        MaterialAlertDialogBuilder(this, R.style.FortifyAlertDialog)
-            .setTitle("Enable Background Sentinel?")
-            .setMessage("Fortify will scan incoming SMS for malicious links in the background. Do you wish to enable this protection?")
-            .setCancelable(false)
-            .setPositiveButton("Enable") { _, _ ->
-                checkAndRequestPermissions()
-            }
-            .setNegativeButton("Cancel") { dialog, _ ->
-                backgroundScanSwitch.isChecked = false
-                dialog.dismiss()
-            }
-            .show()
+    override fun onDestroy() {
+        super.onDestroy()
+        unregisterReceiver(liveUpdateReceiver)
     }
 
     private fun checkAndRequestPermissions() {
         val permissionsToRequest = mutableListOf<String>()
-
         if (ContextCompat.checkSelfPermission(this, Manifest.permission.RECEIVE_SMS) != PackageManager.PERMISSION_GRANTED) {
             permissionsToRequest.add(Manifest.permission.RECEIVE_SMS)
         }
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
                 permissionsToRequest.add(Manifest.permission.POST_NOTIFICATIONS)
             }
         }
-
         if (permissionsToRequest.isNotEmpty()) {
             requestPermissionLauncher.launch(permissionsToRequest.toTypedArray())
-        } else {
-            sharedPreferences.edit().putBoolean("backgroundScanEnabled", true).apply()
-            Toast.makeText(this, "Background Sentinel Active", Toast.LENGTH_SHORT).show()
         }
     }
 }
