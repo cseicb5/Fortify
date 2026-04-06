@@ -7,7 +7,6 @@
     android:background="@color/app_background"
     tools:context=".HomeActivity">
 
-    <!-- YOUR EXISTING UI (UNCHANGED) -->
     <TextView
         android:id="@+id/welcomeTextView"
         android:layout_width="wrap_content"
@@ -25,7 +24,7 @@
         android:id="@+id/subtitleTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Choose a scanner below to begin."
+        android:text="Phishing Sentinel is active."
         android:textColor="@color/text_secondary"
         android:textSize="16sp"
         app:layout_constraintStart_toStartOf="@+id/welcomeTextView"
@@ -40,86 +39,49 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_chainStyle="packed" />
+        app:layout_constraintTop_toTopOf="parent" />
 
-    <!-- I've added an ID to this LinearLayout so we can position the switch below it -->
     <LinearLayout
         android:id="@+id/scannerCardsLayout"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:weightSum="2"
+        android:weightSum="1"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/subtitleTextView"
         app:layout_constraintVertical_bias="0.512">
 
-        <!-- Malware Scan Card -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/malwareScanCard"
             android:layout_width="0dp"
             android:layout_height="120dp"
-            android:layout_marginStart="24dp"
-            android:layout_marginEnd="8dp"
-            android:layout_weight="1"
+            android:visibility="gone"
+            android:layout_weight="0"
             app:cardBackgroundColor="@color/card_background"
             app:cardCornerRadius="16dp"
             app:cardElevation="4dp">
+        </com.google.android.material.card.MaterialCardView>
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/phishingScanCard"
+            android:layout_width="0dp"
+            android:layout_height="130dp"
+            android:layout_marginHorizontal="24dp"
+            android:layout_weight="1"
+            app:cardBackgroundColor="@color/card_background"
+            app:cardCornerRadius="16dp"
+            app:cardElevation="6dp">
 
             <androidx.constraintlayout.widget.ConstraintLayout
                 android:layout_width="match_parent"
                 android:layout_height="match_parent">
 
                 <ImageView
-                    android:id="@+id/malwareIcon"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_marginTop="24dp"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    app:srcCompat="@drawable/ic_shield"
-                    app:tint="@color/text_primary" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Scan APK"
-                    android:textColor="@color/text_primary"
-                    android:textStyle="bold"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/malwareIcon" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
-        </com.google.android.material.card.MaterialCardView>
-
-        <!-- Phishing Scan Card -->
-        <com.google.android.material.card.MaterialCardView
-            android:id="@+id/phishingScanCard"
-            android:layout_width="0dp"
-            android:layout_height="120dp"
-            android:layout_marginStart="8dp"
-            android:layout_marginEnd="24dp"
-            android:layout_weight="1"
-            app:cardBackgroundColor="@color/card_background"
-            app:cardCornerRadius="16dp"
-            app:cardElevation="4dp">
-
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                app:layout_constraintBottom_toBottomOf="parent"
-                app:layout_constraintTop_toTopOf="parent"
-                app:layout_constraintVertical_bias="0.5">
-
-                <ImageView
                     android:id="@+id/phishingIcon"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
+                    android:layout_width="48dp"
+                    android:layout_height="48dp"
                     android:layout_marginTop="24dp"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
@@ -130,10 +92,11 @@
                 <TextView
                     android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
-                    android:text="Scan Message"
+                    android:layout_marginTop="8dp"
+                    android:text="Manual Message Scan"
                     android:textColor="@color/text_primary"
+                    android:textSize="16sp"
                     android:textStyle="bold"
-                    app:layout_constraintBottom_toBottomOf="parent"
                     app:layout_constraintEnd_toEndOf="parent"
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/phishingIcon" />
@@ -141,14 +104,13 @@
         </com.google.android.material.card.MaterialCardView>
     </LinearLayout>
 
-    <!-- THIS IS THE ONLY NEW WIDGET THAT WAS ADDED -->
     <com.google.android.material.switchmaterial.SwitchMaterial
         android:id="@+id/backgroundScanSwitch"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginTop="24dp"
+        android:layout_marginTop="32dp"
         android:layout_marginHorizontal="24dp"
-        android:text="Enable Background SMS Scanning"
+        android:text="Enable Background SMS Sentinel"
         android:textColor="@color/text_primary"
         android:textSize="16sp"
         app:layout_constraintEnd_toEndOf="parent"
@@ -156,4 +118,3 @@
         app:layout_constraintTop_toBottomOf="@+id/scannerCardsLayout" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
-

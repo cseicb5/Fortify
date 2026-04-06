@@ -20,5 +20,13 @@
         <!-- Set the theme the app will transition to *after* the splash screen is done -->
         <item name="postSplashScreenTheme">@style/Theme.Fortify</item>
     </style>
+
+    <style name="FortifyAlertDialog" parent="ThemeOverlay.MaterialComponents.MaterialAlertDialog">
+        <item name="buttonBarPositiveButtonStyle">@style/FortifyAlertButton</item>
+        <item name="buttonBarNegativeButtonStyle">@style/FortifyAlertButton</item>
+    </style>
+
+    <style name="FortifyAlertButton" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="android:textColor">#FFFFFF</item> <item name="rippleColor">#40FFFFFF</item> </style>
 </resources>
 
